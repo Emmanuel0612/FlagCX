@@ -24,6 +24,8 @@ MPI_HOME ?=
 ifeq ($(strip $(DEVICE_HOME)),)
 	ifeq ($(USE_NVIDIA), 1)
 		DEVICE_HOME = /usr/local/cuda
+	else ifeq ($(USE_AMD), 1)
+		DEVICE_HOME = /opt/rocm
 	else ifeq ($(USE_ASCEND), 1)
 		DEVICE_HOME = /usr/local/Ascend/ascend-toolkit/latest
 	else ifeq ($(USE_ILUVATAR_COREX), 1)
@@ -46,6 +48,8 @@ endif
 ifeq ($(strip $(CCL_HOME)),)
 	ifeq ($(USE_NVIDIA), 1)
 		CCL_HOME = /usr/local/nccl/build
+	else ifeq ($(USE_AMD), 1)
+		CCL_HOME = $(DEVICE_HOME)
 	else ifeq ($(USE_ASCEND), 1)
 		CCL_HOME = /usr/local/Ascend/ascend-toolkit/latest
 	else ifeq ($(USE_ILUVATAR_COREX), 1)
@@ -92,6 +96,7 @@ HOST_CCL_INCLUDE =
 HOST_CCL_LINK =
 ADAPTOR_FLAG =
 HOST_CCL_ADAPTOR_FLAG =
+CXX = g++
 ifeq ($(USE_NVIDIA), 1)
 	DEVICE_LIB = $(DEVICE_HOME)/lib64
 	DEVICE_INCLUDE = $(DEVICE_HOME)/include
