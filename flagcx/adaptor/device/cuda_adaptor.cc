@@ -2,6 +2,16 @@
 
 #ifdef USE_NVIDIA_ADAPTOR
 
+// this is a ROCm bug, which has not been implemented.
+#if defined(USE_AMD_ADAPTOR) && defined(HIP_VERSION_MAJOR)
+#if HIP_VERSION_MAJOR < 7
+hipError_t hipEventRecordWithFlags(hipEvent_t event, hipStream_t stream, unsigned int flags)
+{
+    return hipEventRecord(event, stream);
+}
+#endif
+#endif
+
 std::map<flagcxMemcpyType_t, cudaMemcpyKind> memcpy_type_map = {
     {flagcxMemcpyHostToDevice, cudaMemcpyHostToDevice},
     {flagcxMemcpyDeviceToHost, cudaMemcpyDeviceToHost},
