@@ -105,6 +105,15 @@ ifeq ($(USE_NVIDIA), 1)
 	CCL_INCLUDE = $(CCL_HOME)/include
 	CCL_LINK = -lnccl
 	ADAPTOR_FLAG = -DUSE_NVIDIA_ADAPTOR
+else ifeq ($(USE_AMD), 1)
+	DEVICE_LIB = $(DEVICE_HOME)/lib
+	DEVICE_INCLUDE = $(DEVICE_HOME)/include
+	DEVICE_LINK = -lamdhip64
+	CCL_LIB = $(CCL_HOME)/lib
+	CCL_INCLUDE = $(CCL_HOME)/include/rccl
+	CCL_LINK = -lrccl
+	ADAPTOR_FLAG = -DUSE_NVIDIA_ADAPTOR -DUSE_AMD_ADAPTOR
+	CXX = hipcc
 else ifeq ($(USE_ASCEND), 1)
 	DEVICE_LIB = $(DEVICE_HOME)/lib64
 	DEVICE_INCLUDE = $(DEVICE_HOME)/include
@@ -222,6 +231,7 @@ print_var:
 	@echo "HOST_CCL_HOME: $(HOST_CCL_HOME)"
 	@echo "MPI_HOME: $(MPI_HOME)"
 	@echo "USE_NVIDIA: $(USE_NVIDIA)"
+	@echo "USE_AMD: $(USE_AMD)"
 	@echo "USE_ILUVATAR_COREX: $(USE_ILUVATAR_COREX)"
 	@echo "USE_CAMBRICON: $(USE_CAMBRICON)"
 	@echo "USE_KUNLUNXIN: $(USE_KUNLUNXIN)"
@@ -241,12 +251,12 @@ print_var:
 $(LIBDIR)/$(TARGET): $(LIBOBJ)
 	@mkdir -p `dirname $@`
 	@echo "Linking   $@"
-	@g++ $(LIBOBJ) -o $@ -L$(CCL_LIB) -L$(DEVICE_LIB) -L$(HOST_CCL_LIB) -shared -fvisibility=default -Wl,--no-as-needed -Wl,-rpath,$(LIBDIR) -Wl,-rpath,$(CCL_LIB) -Wl,-rpath,$(HOST_CCL_LIB) -lpthread -lrt -ldl $(CCL_LINK) $(DEVICE_LINK) $(HOST_CCL_LINK) -g
+	@$(CXX) $(LIBOBJ) -o $@ -L$(CCL_LIB) -L$(DEVICE_LIB) -L$(HOST_CCL_LIB) -shared -fvisibility=default -Wl,--no-as-needed -Wl,-rpath,$(LIBDIR) -Wl,-rpath,$(CCL_LIB) -Wl,-rpath,$(HOST_CCL_LIB) -lpthread -lrt -ldl $(CCL_LINK) $(DEVICE_LINK) $(HOST_CCL_LINK) -g
 
 $(OBJDIR)/%.o: %.cc
 	@mkdir -p `dirname $@`
 	@echo "Compiling $@"
-	@g++ $< -o $@ $(foreach dir,$(INCLUDEDIR),-I$(dir)) -I$(CCL_INCLUDE) -I$(DEVICE_INCLUDE) -I$(HOST_CCL_INCLUDE) $(ADAPTOR_FLAG) $(HOST_CCL_ADAPTOR_FLAG) -c -fPIC -fvisibility=default -Wvla -Wno-unused-function -Wno-sign-compare -Wall -MMD -MP -g
+	@$(CXX) $< -o $@ $(foreach dir,$(INCLUDEDIR),-I$(dir)) -I$(CCL_INCLUDE) -I$(DEVICE_INCLUDE) -I$(HOST_CCL_INCLUDE) $(ADAPTOR_FLAG) $(HOST_CCL_ADAPTOR_FLAG) -c -fPIC -fvisibility=default -Wvla -Wno-unused-function -Wno-sign-compare -Wall -MMD -MP -g
 
 -include $(LIBOBJ:.o=.d)
 
